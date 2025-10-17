@@ -1,0 +1,26 @@
+services:
+  # The PostgreSQL Database Service
+  db:
+    image: postgres:16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=bank_db
+      - POSTGRES_USER=bank_user
+      - POSTGRES_PASSWORD=bankdjangopass
+
+  # The Django Web Application Service
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8500
+    volumes:
+      - .:/app
+    ports:
+      - "8500:8500"
+    environment:
+      - DATABASE_URL=postgres://bank_user:bankdjangopass@db:5432/bank_db
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

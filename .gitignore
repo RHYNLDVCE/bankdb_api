@@ -1,0 +1,17 @@
+.env             
+/secrets/    
+pycache/
+*.pyc
+*.log
+*.sqlite3
+/env/         
+/venv/        
+/htmlcov/      
+/volumes/
+docker-compose.override.yml
+.dockerignore
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
