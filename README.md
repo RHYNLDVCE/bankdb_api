@@ -8,93 +8,194 @@ A Django REST API for bank customers, accounts, and transactions.
 
 ## First-time setup (Docker)
 1. Build images:
-   ```sh
+   ```bash
    docker compose build
    ```
+
 2. Start services:
-   ```sh
+   ```bash
    docker compose up -d
    ```
+
 3. Apply migrations:
-   ```sh
+   ```bash
    docker compose exec web python manage.py migrate
    ```
+
 4. Create a superuser:
-   ```sh
+   ```bash
    docker compose exec web python manage.py createsuperuser
    ```
 
-The app will be available at: http://localhost:8500
+The app will be available at: http://localhost:8000
 
 ## Daily commands
-- Start:
-  ```sh
-  docker compose up -d
-  ```
-- Stop:
-  ```sh
-  docker compose down
-  ```
-- Run tests:
-  ```sh
-  docker compose exec web python manage.py test
-  ```
+Start services:
+```bash
+docker compose up -d
+```
+
+Stop services:
+```bash
+docker compose down
+```
+
+Run tests:
+```bash
+docker compose exec web python manage.py test
+```
 
 ## Authentication
-All API endpoints (except registration) require token authentication.
+All API endpoints (except registration and get-token) require token authentication.
 
-- Obtain token: `POST /api/get-token/`
-- Include the token in the Authorization header for authenticated requests:
-  ```
-  Authorization: Token <your_token_here>
-  ```
+Include the token in the Authorization header for authenticated requests:
+```
+Authorization: Token <your_token_here>
+```
 
-## API Endpoints (summary)
+## API Endpoints
 Base path: `/api/`
 
-- Registration
-  - `POST /api/register/` (public)
-    Example request body:
-    ```json
-    {
-      "username": "newuser",
-      "password": "a-strong-password123",
-      "full_name": "New Test User",
-      "email": "new@example.com",
-      "phone_number": "555-1234",
-      "date_of_birth": "1995-05-15",
-      "gender": "F"
-    }
-    ```
-    Success (201):
-    ```json
-    { "username": "newuser", "email": "new@example.com" }
-    ```
+### Registration & Authentication
 
-- Authentication
-  - `POST /api/get-token/`
-    Request:
-    ```json
-    { "username": "your_username", "password": "your_password" }
-    ```
-    Success (200):
-    ```json
-    { "token": "<token>" }
-    ```
+#### POST /api/register/ (Public)
+Creates a new user and a linked customer profile.
 
-- Customers
-  - `GET, POST /api/customers/` — list/create customer profiles linked to the authenticated user.
+Request body:
+```json
+{
+  "username": "newuser",
+  "password": "a-strong-password123",
+  "full_name": "New Test User",
+  "email": "new@example.com",
+  "phone_number": "555-1234",
+  "date_of_birth": "1995-05-15",
+  "gender": "F"
+}
+```
 
-- Accounts
-  - `GET, POST /api/accounts/` — list/create bank accounts for the authenticated user.
-  - `POST /api/accounts/{id}/deposit/` — body: `{ "amount": "500.25" }`
-  - `POST /api/accounts/{id}/withdraw/` — body: `{ "amount": "100.00" }`
-  - `POST /api/accounts/{id}/transfer/` — body: `{ "to_account_number": "ACC-123456789", "amount": "150.00" }`
+Success (201):
+```json
+{
+  "username": "newuser",
+  "email": "new@example.com"
+}
+```
 
-- Transactions
-  - `GET /api/transactions/` — list all transaction records for the user's accounts (read-only).
+#### POST /api/get-token/ (Public)
+Trades a username and password for an authentication token.
+
+Request body:
+```json
+{
+  "username": "your_username",
+  "password": "your_password"
+}
+```
+
+Success (200):
+```json
+{
+  "token": "<token>"
+}
+```
+
+### Customers
+Endpoints to manage the authenticated user's customer profile.
+
+- `GET, POST /api/customers/`
+  - GET: Lists the customer profile for the authenticated user
+  - POST: Creates a new customer profile and links it to the authenticated user
+
+- `GET, PUT, PATCH, DELETE /api/customers/{id}/`
+  - GET: Retrieves the customer profile
+  - PUT: Updates the entire customer profile
+  - PATCH: Partially updates the customer profile
+  - DELETE: Deletes the customer profile
+
+### Accounts & Actions
+Endpoints to manage the authenticated user's bank accounts.
+
+- `GET, POST /api/accounts/`
+  - GET: Lists all bank accounts for the authenticated user
+  - POST: Creates a new bank account for the user
+
+- `GET, PUT, PATCH, DELETE /api/accounts/{id}/`
+  - GET: Retrieves a specific bank account
+  - PUT: Updates a specific bank account
+  - PATCH: Partially updates a specific bank account
+  - DELETE: Deletes a specific bank account
+
+#### POST /api/accounts/{id}/deposit/
+Request body:
+```json
+{
+  "amount": "500.25"
+}
+```
+
+Success (200):
+```json
+{
+  "status": "deposit successful",
+  "new_balance": "600.25"
+}
+```
+
+#### POST /api/accounts/{id}/withdraw/
+Request body:
+```json
+{
+  "amount": "100.00"
+}
+```
+
+Success (200):
+```json
+{
+  "status": "withdrawal successful",
+  "new_balance": "500.25"
+}
+```
+
+#### POST /api/accounts/{id}/transfer/
+The {id} in the URL is the source account.
+
+Request body:
+```json
+{
+  "to_account_number": "ACC-123456789",
+  "amount": "150.00"
+}
+```
+
+Success (200):
+```json
+{
+  "status": "transfer successful",
+  "from_account_balance": "350.25"
+}
+```
+
+### Transactions (Read-Only)
+Endpoints to view the user's transaction history. Transactions are created automatically by other actions.
+
+- `GET /api/transactions/`
+  - Lists all transaction records for the authenticated user's accounts
+
+- `GET /api/transactions/{id}/`
+  - Retrieves a specific transaction record
+
+### Browsable API Login
+`GET, POST /api-auth/`
+
+Provides a login/logout view for the Browsable API when accessed in a web browser. This is for development/manual testing and does not affect token authentication.
 
 ## Notes
-- Account numbers are autogenerated.
-- Transactions are created by account actions (deposit / withdraw / transfer).
-- Use `docker compose exec web python manage.py makemigrations` and `migrate` after model changes.
+- Account numbers are autogenerated on creation
+- Transactions are immutable and are created by account actions (deposit, withdraw, transfer)
+- After changing any models.py file, you must create and apply migrations:
+  ```bash
+  docker compose exec web python manage.py makemigrations
+  docker compose exec web python manage.py migrate
+  ```
