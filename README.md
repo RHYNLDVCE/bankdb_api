@@ -107,12 +107,13 @@ Endpoints to manage the authenticated user's customer profile.
   - GET: Lists the customer profile for the authenticated user
   - POST: Creates a new customer profile and links it to the authenticated user
 
-    ```{
+    ```json
+    {
         "owner": 1,
         "account_type": "CHECKING",
         "balance": "100.00"
-    }
-  ```
+    }```
+  
 - `GET, PUT, PATCH, DELETE /api/customers/{id}/`
   - GET: Retrieves the customer profile
   - PUT: Updates the entire customer profile
@@ -125,7 +126,12 @@ Endpoints to manage the authenticated user's bank accounts.
 - `GET, POST /api/accounts/`
   - GET: Lists all bank accounts for the authenticated user
   - POST: Creates a new bank account for the user
-
+```
+json
+    {
+        "account_type": "SAVINGS"
+    }
+```
 - `GET, PUT, PATCH, DELETE /api/accounts/{id}/`
   - GET: Retrieves a specific bank account
   - PUT: Updates a specific bank account
