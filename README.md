@@ -107,6 +107,12 @@ Endpoints to manage the authenticated user's customer profile.
   - GET: Lists the customer profile for the authenticated user
   - POST: Creates a new customer profile and links it to the authenticated user
 
+    ```{
+        "owner": 1,
+        "account_type": "CHECKING",
+        "balance": "100.00"
+    }
+  ```
 - `GET, PUT, PATCH, DELETE /api/customers/{id}/`
   - GET: Retrieves the customer profile
   - PUT: Updates the entire customer profile
